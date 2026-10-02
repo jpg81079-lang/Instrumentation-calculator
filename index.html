@@ -1,0 +1,80 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#17324d">
+<link rel="manifest" href="manifest.webmanifest">
+<title>Water & Instrument Calculator</title>
+<style>
+:root{font-family:system-ui,-apple-system,Segoe UI,Roboto,sans-serif;color:#16202a;background:#eef2f5}
+*{box-sizing:border-box} body{margin:0} main{max-width:680px;margin:auto;padding:16px}
+header{background:#17324d;color:white;padding:20px 16px;border-radius:16px;margin-bottom:14px}
+h1{font-size:24px;margin:0 0 5px} header p{margin:0;opacity:.85}
+.tabs{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:14px}
+button{min-height:50px;border:0;border-radius:12px;font-size:16px;font-weight:700;padding:10px;background:#dbe3e9;color:#16202a}
+button.active,.calc{background:#1769aa;color:white}
+.card{background:white;border-radius:16px;padding:18px;box-shadow:0 1px 5px #0002}
+.card h2{margin:0 0 4px}.sub{color:#5b6770;margin:0 0 16px}
+.grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+label{font-weight:650;font-size:14px}
+input,select{width:100%;margin-top:6px;min-height:50px;border:1px solid #aab5bd;border-radius:10px;padding:10px;font-size:18px;background:white}
+.actions{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:15px}
+.result{margin-top:15px;padding:16px;border-radius:12px;background:#edf5fb;text-align:center;font-size:22px;font-weight:800}
+.note{font-size:13px;color:#5b6770;margin-top:10px}.hidden{display:none}
+@media(max-width:430px){main{padding:10px}.tabs button{font-size:13px;padding:6px}.grid{grid-template-columns:1fr}.actions{grid-template-columns:1fr}header{border-radius:12px}}
+</style>
+</head>
+<body>
+<main>
+<header><h1>Water & Instrument Calculator</h1><p>Field utility • works offline</p></header>
+<nav class="tabs">
+<button class="tab active" data-id="ma">4–20 mA</button>
+<button class="tab" data-id="psi">PSI / Head</button>
+<button class="tab" data-id="flow">Water Flow</button>
+</nav>
+
+<section id="ma" class="card panel">
+<h2>4–20 mA Scaling</h2><p class="sub">Convert signal current and engineering units.</p>
+<div class="grid">
+<label>Range Low<input id="lo" type="number" step="any" value="0"></label>
+<label>Range High<input id="hi" type="number" step="any" value="100"></label>
+<label>mA<input id="mav" type="number" step="any" value="12"></label>
+<label>Process Value<input id="pv" type="number" step="any" value="50"></label>
+</div>
+<div class="actions"><button class="calc" id="m2p">mA → Value</button><button id="p2m">Value → mA</button></div>
+<div class="result" id="mar">12.00 mA = 50.00</div>
+</section>
+
+<section id="psi" class="card panel hidden">
+<h2>PSI ↔ Feet of Water</h2><p class="sub">Fresh water approximation: 1 PSI ≈ 2.31 ft H₂O.</p>
+<div class="grid"><label>PSI<input id="psiv" type="number" step="any" value="60"></label>
+<label>Feet of Water<input id="ftv" type="number" step="any" value="138.6"></label></div>
+<div class="actions"><button class="calc" id="p2f">PSI → Feet</button><button id="f2p">Feet → PSI</button></div>
+<div class="result" id="psir">60 PSI ≈ 138.6 ft</div>
+</section>
+
+<section id="flow" class="card panel hidden">
+<h2>GPM ↔ MGD</h2><p class="sub">Water flow conversion.</p>
+<div class="grid"><label>Gallons per Minute (GPM)<input id="gpm" type="number" step="any" value="1000"></label>
+<label>Million Gallons/Day (MGD)<input id="mgd" type="number" step="any" value="1.44"></label></div>
+<div class="actions"><button class="calc" id="g2m">GPM → MGD</button><button id="m2g">MGD → GPM</button></div>
+<div class="result" id="flowr">1,000 GPM = 1.440 MGD</div>
+<p class="note">GPM × 1,440 ÷ 1,000,000 = MGD</p>
+</section>
+</main>
+<script>
+const $=x=>document.getElementById(x), n=x=>Number($(x).value);
+document.querySelectorAll('.tab').forEach(b=>b.onclick=()=>{
+ document.querySelectorAll('.tab').forEach(x=>x.classList.remove('active')); b.classList.add('active');
+ document.querySelectorAll('.panel').forEach(x=>x.classList.add('hidden')); $(b.dataset.id).classList.remove('hidden');
+});
+$('m2p').onclick=()=>{let lo=n('lo'),hi=n('hi'),m=n('mav');if(hi===lo)return;let v=lo+(m-4)/16*(hi-lo);$('pv').value=v.toFixed(3);$('mar').textContent=`${m.toFixed(2)} mA = ${v.toFixed(3)}`};
+$('p2m').onclick=()=>{let lo=n('lo'),hi=n('hi'),v=n('pv');if(hi===lo)return;let m=4+(v-lo)/(hi-lo)*16;$('mav').value=m.toFixed(3);$('mar').textContent=`${v.toFixed(3)} = ${m.toFixed(3)} mA`};
+$('p2f').onclick=()=>{let p=n('psiv'),f=p*2.31;$('ftv').value=f.toFixed(2);$('psir').textContent=`${p} PSI ≈ ${f.toFixed(2)} ft`};
+$('f2p').onclick=()=>{let f=n('ftv'),p=f/2.31;$('psiv').value=p.toFixed(2);$('psir').textContent=`${f} ft ≈ ${p.toFixed(2)} PSI`};
+$('g2m').onclick=()=>{let g=n('gpm'),m=g*1440/1e6;$('mgd').value=m.toFixed(4);$('flowr').textContent=`${g.toLocaleString()} GPM = ${m.toFixed(4)} MGD`};
+$('m2g').onclick=()=>{let m=n('mgd'),g=m*1e6/1440;$('gpm').value=g.toFixed(2);$('flowr').textContent=`${m} MGD = ${g.toLocaleString(undefined,{maximumFractionDigits:2})} GPM`};
+if('serviceWorker' in navigator) navigator.serviceWorker.register('./sw.js');
+</script>
+</body></html>
